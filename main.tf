@@ -6,14 +6,14 @@ resource "azurerm_resource_group" "rgsa" {
 
 # Create an Azure Event Hub Namespace and corresponding Event Hub for data input into Azure Stream Analytics
 resource "azurerm_eventhub_namespace" "ehnamespace" {
-  name                = "input-event-hub-namespace"
+  name                = "ldinput-event-hub-namespace"
   location            = var.location
   resource_group_name = azurerm_resource_group.rgsa.name
   sku                 = "Standard"
 }
 
 resource "azurerm_eventhub" "eh" {
-  name                = "input-event-hub"
+  name                = "ldinput-event-hub"
   namespace_name      = azurerm_eventhub_namespace.ehnamespace.name
   resource_group_name = azurerm_resource_group.rgsa.name
   partition_count     = 2
@@ -21,14 +21,14 @@ resource "azurerm_eventhub" "eh" {
 }
 
 resource "azurerm_eventhub_consumer_group" "ehconsumergroup" {
-  name                = "input-event-hub-consumer-group"
+  name                = "ldinput-event-hub-consumer-group"
   namespace_name      = azurerm_eventhub_namespace.ehnamespace.name
   eventhub_name       = azurerm_eventhub.eh.name
   resource_group_name = azurerm_resource_group.rgsa.name
 }
 
 resource "azurerm_eventhub_authorization_rule" "ehsend" {
-  name                = "input-event-hub-authorization"
+  name                = "ldinput-event-hub-authorization"
   namespace_name      = azurerm_eventhub_namespace.ehnamespace.name
   eventhub_name       = azurerm_eventhub.eh.name
   resource_group_name = azurerm_resource_group.rgsa.name
@@ -49,7 +49,7 @@ resource "random_password" "dbpassword" {
 
 # Create an Azure SQL Database to store reference data
 resource "azurerm_sql_server" "sqlserver" {
-  name                         = "sqlserver-refdata-event-hub"
+  name                         = "ldsqlserver-refdata-event-hub"
   resource_group_name          = azurerm_resource_group.rgsa.name
   location                     = var.location
   version                      = "12.0"
@@ -66,20 +66,20 @@ resource "azurerm_sql_database" "sqldb" {
 
 # Create an Azure Service Bus Namespace and Topic for data output
 resource "azurerm_servicebus_namespace" "sb" {
-  name                = "servicebus-output"
+  name                = "ldservicebus-output"
   location            = var.location
   resource_group_name = azurerm_resource_group.rgsa.name
   sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_topic" "sbtopic" {
-  name                = "sb-output-topic"
+  name                = "ldsb-output-topic"
   resource_group_name = azurerm_resource_group.rgsa.name
   namespace_name      = azurerm_servicebus_namespace.sb.name
 }
 
 resource "azurerm_servicebus_topic_authorization_rule" "sbtopicauthrulewrite" {
-  name                = "sb-output-topic-auth-rule-write"
+  name                = "ldsb-output-topic-auth-rule-write"
   namespace_name      = azurerm_servicebus_namespace.sb.name
   topic_name          = azurerm_servicebus_topic.sbtopic.name
   resource_group_name = azurerm_resource_group.rgsa.name
@@ -90,7 +90,7 @@ resource "azurerm_servicebus_topic_authorization_rule" "sbtopicauthrulewrite" {
 
 # Create an Azure blob storage account for Azure Stream Analytics
 resource "azurerm_storage_account" "ehstor" {
-  name                     = "ehstorage1"
+  name                     = "ldehstorage1"
   resource_group_name      = azurerm_resource_group.rgsa.name
   location                 = var.location
   account_tier             = "Standard"
