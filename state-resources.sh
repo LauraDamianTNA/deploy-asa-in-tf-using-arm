@@ -2,7 +2,10 @@
 az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
 
 # Create a new Azure resource group
-az group create -n $STATE_RG_NAME -l $LOCATION
+$rsgExists = az group exists -n $STATE_RG_NAME
+if ($rsgExists -eq 'false') {
+    az group create -l $LOCATION -n $STATE_RG_NAME
+}
 
 # Create a new blob storage account
 az storage account create -n $STATE_STOR_NAME -g $STATE_RG_NAME -l $LOCATION --sku Standard_LRS
