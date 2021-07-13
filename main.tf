@@ -1,21 +1,21 @@
 # Create a resource group for below resources
-resource "azurerm_resource_group" "rgsa" {
-  name     = "stream-analytics-rg"
-  location = var.location
-}
+# resource "azurerm_resource_group" "rgsa" {
+#   name     = "stream-analytics-rg"
+#   location = var.location
+# }
 
 # Create an Azure Event Hub Namespace and corresponding Event Hub for data input into Azure Stream Analytics
 resource "azurerm_eventhub_namespace" "ehnamespace" {
   name                = "ldinput-event-hub-namespace"
   location            = var.location
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   sku                 = "Standard"
 }
 
 resource "azurerm_eventhub" "eh" {
   name                = "ldinput-event-hub"
   namespace_name      = azurerm_eventhub_namespace.ehnamespace.name
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   partition_count     = 2
   message_retention   = 1
 }
@@ -24,14 +24,14 @@ resource "azurerm_eventhub_consumer_group" "ehconsumergroup" {
   name                = "ldinput-event-hub-consumer-group"
   namespace_name      = azurerm_eventhub_namespace.ehnamespace.name
   eventhub_name       = azurerm_eventhub.eh.name
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
 }
 
 resource "azurerm_eventhub_authorization_rule" "ehsend" {
   name                = "ldinput-event-hub-authorization"
   namespace_name      = azurerm_eventhub_namespace.ehnamespace.name
   eventhub_name       = azurerm_eventhub.eh.name
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   listen              = false
   send                = true
 }
@@ -50,7 +50,7 @@ resource "random_password" "dbpassword" {
 # Create an Azure SQL Database to store reference data
 resource "azurerm_sql_server" "sqlserver" {
   name                         = "ldsqlserver-refdata-event-hub"
-  resource_group_name          = azurerm_resource_group.rgsa.name
+  resource_group_name          = var.RG_NAME
   location                     = var.location
   version                      = "12.0"
   administrator_login          = var.administrator_login
@@ -59,7 +59,7 @@ resource "azurerm_sql_server" "sqlserver" {
 
 resource "azurerm_sql_database" "sqldb" {
   name                = "sqldb-refdata-eventhub"
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   location            = var.location
   server_name         = azurerm_sql_server.sqlserver.name
 }
@@ -68,13 +68,13 @@ resource "azurerm_sql_database" "sqldb" {
 resource "azurerm_servicebus_namespace" "sb" {
   name                = "ldservicebus-output"
   location            = var.location
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_topic" "sbtopic" {
   name                = "ldsb-output-topic"
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   namespace_name      = azurerm_servicebus_namespace.sb.name
 }
 
@@ -82,7 +82,7 @@ resource "azurerm_servicebus_topic_authorization_rule" "sbtopicauthrulewrite" {
   name                = "ldsb-output-topic-auth-rule-write"
   namespace_name      = azurerm_servicebus_namespace.sb.name
   topic_name          = azurerm_servicebus_topic.sbtopic.name
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   listen              = false
   send                = true
   manage              = false
@@ -91,7 +91,7 @@ resource "azurerm_servicebus_topic_authorization_rule" "sbtopicauthrulewrite" {
 # Create an Azure blob storage account for Azure Stream Analytics
 resource "azurerm_storage_account" "ehstor" {
   name                     = "ldehstorage1"
-  resource_group_name      = azurerm_resource_group.rgsa.name
+  resource_group_name      = var.RG_NAME
   location                 = var.location
   account_tier             = "Standard"
   account_replication_type = "GRS"
@@ -100,7 +100,7 @@ resource "azurerm_storage_account" "ehstor" {
 # Define ARM deployment template for the Azure Stream Analytics deployment
 resource "azurerm_resource_group_template_deployment" "azure_stream_analytics" {
   name                = "azure_stream_analytics"
-  resource_group_name = azurerm_resource_group.rgsa.name
+  resource_group_name = var.RG_NAME
   deployment_mode     = "Incremental"
   parameters_content = jsonencode({
     "parameterBlock" : {

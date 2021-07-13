@@ -11,3 +11,6 @@ variable "administrator_login" {
   sensitive   = true
 }
 
+variable "RG_NAME" {
+  type = string
+}
