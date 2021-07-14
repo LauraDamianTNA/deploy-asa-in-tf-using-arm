@@ -1,13 +1,13 @@
-# Create a resource group for below resources
-# resource "azurerm_resource_group" "rgsa" {
-#   name     = "stream-analytics-rg"
-#   location = var.location
-# }
+Create a resource group for below resources
+resource "azurerm_resource_group" "rgsa" {
+  name     = "stream-analytics-rg"
+  location = var.LOCATION
+}
 
 # Create an Azure Event Hub Namespace and corresponding Event Hub for data input into Azure Stream Analytics
 resource "azurerm_eventhub_namespace" "ehnamespace" {
   name                = "ldinput-event-hub-namespace"
-  location            = var.location
+  location            = var.LOCATION
   resource_group_name = var.RG_NAME
   sku                 = "Standard"
 }
@@ -51,7 +51,7 @@ resource "random_password" "dbpassword" {
 resource "azurerm_sql_server" "sqlserver" {
   name                         = "ldsqlserver-refdata-event-hub"
   resource_group_name          = var.RG_NAME
-  location                     = var.location
+  location                     = var.LOCATION
   version                      = "12.0"
   administrator_login          = var.administrator_login
   administrator_login_password = random_password.dbpassword.result
@@ -60,14 +60,14 @@ resource "azurerm_sql_server" "sqlserver" {
 resource "azurerm_sql_database" "sqldb" {
   name                = "sqldb-refdata-eventhub"
   resource_group_name = var.RG_NAME
-  location            = var.location
+  location            = var.LOCATION
   server_name         = azurerm_sql_server.sqlserver.name
 }
 
 # Create an Azure Service Bus Namespace and Topic for data output
 resource "azurerm_servicebus_namespace" "sb" {
   name                = "ldservicebus-output"
-  location            = var.location
+  location            = var.LOCATION
   resource_group_name = var.RG_NAME
   sku                 = "Standard"
 }
@@ -92,7 +92,7 @@ resource "azurerm_servicebus_topic_authorization_rule" "sbtopicauthrulewrite" {
 resource "azurerm_storage_account" "ehstor" {
   name                     = "ldehstorage1"
   resource_group_name      = var.RG_NAME
-  location                 = var.location
+  location                 = var.LOCATION
   account_tier             = "Standard"
   account_replication_type = "GRS"
 }
@@ -107,7 +107,7 @@ resource "azurerm_resource_group_template_deployment" "azure_stream_analytics" {
       "value" : {
         "asa_query" : file("${path.module}/stream-analytics/asaquery.asaql")
         "name" : "azure_stream_analytics"
-        "location" : var.location
+        "location" : var.LOCATION
         "server" : azurerm_sql_server.sqlserver.name
         "database" : azurerm_sql_database.sqldb.name
         "user" : var.administrator_login
