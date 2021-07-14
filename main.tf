@@ -1,4 +1,4 @@
-Create a resource group for below resources
+# Create a resource group for below resources
 resource "azurerm_resource_group" "rgsa" {
   name     = "stream-analytics-rg"
   location = var.LOCATION
